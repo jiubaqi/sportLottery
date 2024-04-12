@@ -1,0 +1,101 @@
+<!DOCTYPE html>  
+<html lang="en">  
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">  
+    <title>赔率计算器</title>  
+</head>  
+<body>  
+<style>
+#oddsForm {  
+    display: flex;  
+    align-items: center;  
+    justify-content: flex-start;  
+}
+#oddsForm label {  
+    margin-right: 10px;
+}
+#oddsForm label:last-child {  
+    margin-right: 0;  
+}  
+</style>  
+<form id="oddsForm">  
+    <label><h3>过关方式:</h3></label>
+    <label><input type="checkbox" value="1" name="combinations"> 单关</label>
+    <label><input type="checkbox" value="2" name="combinations"> 2串1</label>
+    <label><input type="checkbox" value="3" name="combinations"> 3串1</label>
+    <label><input type="checkbox" value="4" name="combinations"> 4串1</label>
+    <label><input type="checkbox" value="5" name="combinations"> 5串1</label>
+    <label><input type="checkbox" value="6" name="combinations"> 6串1</label>
+    <label><input type="checkbox" value="7" name="combinations"> 7串1</label>
+    <label><input type="checkbox" value="8" name="combinations"> 8串1</label>
+</form>
+    <label>倍数:<input type="text" value="1" id="times" name="times"></label><br> 
+<div id="results">  
+    <h2>结果</h2>  
+    <p>投注金额: <span id="betAmount">0</span></p>  
+    <p>最高奖金: <span id="maxReward">0</span></p>  
+</div>  
+  
+ 
+<script>
+
+// 点击比赛的ODDS 获取对应的赔率  数组最大存8个 多了弹前端提示 
+// 赔率数组，现在每个元素是一个对象，包含赔率值和其他字段  
+const matchOdds = [  
+    { odd: '4.20', A: 'h', type: 'had' , matchId: '1'  },  
+    { odd: '1.22', A: 'a', type: 'had' , matchId: '2'  },
+    { odd: '1.73', A: 'a', type: 'hhad' , matchId: '3'  },
+    { odd: '1.65', A: 'd', type: 'had' , matchId: '4' } , 
+    { odd: '1.74', A: 'a', type: 'hhad' , matchId: '5'  },
+    { odd: '1.75', A: 'a', type: 'had' , matchId: '6'  },
+    { odd: '1.76', A: 'a', type: 'hhad' , matchId: '7'  },
+    { odd: '1.77', A: 'a', type: 'hhad' , matchId: '8'  }
+];  
+  
+function getCombinations(arr, k) {  
+    const combinations = [];  
+    function backtrack(start, path) {  
+        if (path.length === k) {  
+            combinations.push(path.map(item => item.odd)); // 存储赔率值  
+            return;  
+        }  
+        for (let i = start; i < arr.length; i++) {  
+            backtrack(i + 1, [...path, arr[i]]);  
+        }  
+    }  
+    backtrack(0, []);  
+    return combinations;  
+}  
+  
+function calculateOdds() {  
+    let totalBetAmount = 0;  
+    let totalMaxReward = 0;  
+    var times = document.getElementById('times').value;
+    const selectedCombinations = Array.from(document.querySelectorAll('input[name="combinations"]:checked')).map(checkbox => parseInt(checkbox.value, 10));  
+  
+    for (const method of selectedCombinations) {  
+        const combinations = getCombinations(matchOdds, method); // 这里返回的是赔率值数组  
+        let result = 0;  
+        for (const combination of combinations) {  
+            // 转换赔率值数组为对应的赔率对象数组  
+            const oddObjects = combination.map(odd => matchOdds.find(obj => obj.odd === odd));  
+            // 计算组合的总赔率  
+            const product = oddObjects.reduce((acc, val) => acc * parseFloat(val.odd), 1);  
+            result += product * 2; // 赔率来乘以买的钱
+        }  
+        totalBetAmount += combinations.length * 2 * times; // 一注2块    
+        totalMaxReward += result * times;  
+    }  
+      
+    document.getElementById('betAmount').textContent = totalBetAmount;  
+    document.getElementById('maxReward').textContent = totalMaxReward.toFixed(2);  
+}
+  
+// 监听表单中的变化，并在变化时重新计算  
+document.getElementById('oddsForm').addEventListener('change', calculateOdds);
+document.getElementById('times').addEventListener('change', calculateOdds);
+
+</script>
+</body>  
+</html>
